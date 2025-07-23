@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import UserCard from "../components/UserCard";
 
 const UserDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -18,40 +20,85 @@ const UserDetailPage = () => {
             "x-api-key": "reqres-free-v1",
           },
         });
-        setUser(res.data.data);
+
+        if (!res.data.data) {
+          setError("User tidak ditemukan.");
+        } else {
+          setUser(res.data.data);
+        }
       } catch (err) {
         console.error("Gagal ambil detail user:", err);
         setError("Gagal memuat detail user.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUser();
   }, [id]);
 
-  if (error) return <p className="text-red-500 text-center mt-4">{error}</p>;
-  if (!user) return <p className="text-center mt-4">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700">
+        <div className="text-center">
+          <svg
+            className="animate-spin h-12 w-12 text-white mx-auto mb-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth={4}
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+          <p className="text-white text-lg font-semibold">
+            Memuat data pengguna...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <p
+        className="text-red-500 text-center mt-4"
+        role="alert"
+        aria-live="assertive"
+      >
+        {error}
+      </p>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 via-blue-100 to-purple-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center animate-fade-in">
-        <h2 className="text-3xl font-bold mb-4 text-blue-700">User Details</h2>
-        <img
-          src={user.avatar}
-          alt={user.first_name}
-          className="mx-auto rounded-full w-32 h-32 mb-4 border-4 border-blue-200 shadow"
-        />
-        <h3 className="text-2xl font-semibold text-gray-800 mb-2">
-          {user.first_name} {user.last_name}
-        </h3>
-        <p className="text-gray-600 mb-6 text-sm">Email: {user.email}</p>
-        <button
-          onClick={() => navigate(-1)}
-          className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-full shadow hover:bg-green-600 transition duration-200"
-        >
-          Back
-        </button>
+    <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8 md:p-12">
+        {/* User */}
+        {user && <UserCard user={user} />}
+
+        {/*  Back */}
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-2 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition"
+            aria-label="Back to previous page"
+          >
+            Back
+          </button>
+        </div>
       </div>
-    </div>
+    </main>
   );
 };
 
